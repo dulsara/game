@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+/**
+ * General Error message format
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

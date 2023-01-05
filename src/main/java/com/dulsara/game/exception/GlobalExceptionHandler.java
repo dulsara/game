@@ -9,9 +9,15 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.Instant;
 
+/**
+ * Globally manage the Exception as central place in Rest API
+ * This class managed general error messages when exception occurs,
+ * that general error message format expose as error response to the client
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    // specify  the Bad Request Exception
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<?> ForbiddenExceptionHandler(Exception ex, WebRequest request) {
         ErrorDetails errorDetails = new ErrorDetails(Instant.now(), ex.getMessage(), request.getDescription(false));

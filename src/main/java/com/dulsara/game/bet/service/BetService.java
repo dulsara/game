@@ -1,6 +1,7 @@
 package com.dulsara.game.bet.service;
 
 
+import com.dulsara.game.bet.dto.BetDTO;
 import com.dulsara.game.bet.model.Bet;
 import com.dulsara.game.exception.BadRequestException;
 import com.dulsara.game.util.GlobalConstant;
@@ -18,35 +19,44 @@ import java.util.Random;
 public class BetService {
 
 
-    public Bet processBet(Bet bet) throws Exception {
-        validateBet(bet);
-        bet.setWinValue(calculateWinValue(bet,generateServerBet()));
-        return bet;
+    public Bet processBet(BetDTO betDTO) throws Exception {
+        // validate user input
+        validateBet(betDTO);
+        // if user input is valid, perform bet operation
+        Bet validBet = new Bet();
+        validBet.setBet(betDTO.getBet());
+        validBet.setNumber(betDTO.getNumber());
+        // set user win value, if use wins calculate win value based on formula, user loose win value should be zero
+        validBet.setWinValue(calculateWinValue(validBet.getNumber(),generateServerBet(),validBet.getBet()));
+        return validBet;
     }
 
 
-    private void validateBet(Bet bet) throws Exception {
+    private void validateBet(BetDTO betDTO) throws Exception {
 
-        if (bet.getNumber() == null) {
+        if (betDTO.getNumber() == null) {
             throw new BadRequestException(GlobalConstant.BetErrors.BET_NUMBER_MANDATORY_ERROR);
         }
-        if (bet.getBet() == null || bet.getBet().isNaN()) {
+        if (betDTO.getBet() == null || betDTO.getBet().isNaN()) {
             throw new BadRequestException(GlobalConstant.BetErrors.BET_VALUE_MANDATORY_ERROR);
         }
 
-        if (bet.getNumber() > 99 || bet.getNumber() < 1) {
+        // user value should less than 100 and more than 0
+        if (betDTO.getNumber() > 99 || betDTO.getNumber() < 1) {
             throw new BadRequestException(GlobalConstant.BetErrors.BET_NUMBER_INVALID_ERROR);
         }
 
-        if (bet.getBet() <= 0.00 ) {
+        // bet value can't be minus value
+        if (betDTO.getBet() <= 0.00 ) {
             throw new BadRequestException(GlobalConstant.BetErrors.BET_INVALID_ERROR);
         }
     }
 
-    public Double calculateWinValue (Bet bet, Integer serverNumber) {
+    public Double calculateWinValue (Integer userBetNumber, Integer serverNumber, Double userBet) {
 
-        if (bet.getNumber() >= serverNumber) {
-            Double win = (bet.getBet() * 99) / (100 - bet.getNumber());
+        // execute win value formula
+        if (userBetNumber >= serverNumber) {
+            Double win = (userBet * 99) / (100 - userBetNumber);
 
             BigDecimal winDecimalValue = new BigDecimal(win).setScale(2, RoundingMode.HALF_UP);
 
@@ -58,7 +68,7 @@ public class BetService {
 
     }
 
-    public Integer generateServerBet () {
+    private Integer generateServerBet () {
         Random r = new Random();
         Integer serverNumber = r.nextInt(GlobalConstant.RandomValueGenerator.MAX_VALUE-GlobalConstant.RandomValueGenerator.MIN_VALUE) + GlobalConstant.RandomValueGenerator.MIN_VALUE;
         return serverNumber;
